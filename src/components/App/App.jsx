@@ -44,6 +44,7 @@ export const App = () => {
     setQuery(query);
     setPage(1);
     setImages([]);
+    setTotalPages(0);
   };
 
   const onLoadMore = async () => {
