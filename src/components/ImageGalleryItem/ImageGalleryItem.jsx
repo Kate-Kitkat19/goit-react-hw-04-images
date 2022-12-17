@@ -1,50 +1,47 @@
 import { Image, GalleryItem } from './ImageGalleryItem.styled';
-import React, { Component } from 'react';
 import { ModalWindow } from '../Modal/Modal';
 import propTypes from 'prop-types';
+import { useState } from 'react';
 
-export class ImageGalleryItem extends Component {
-  state = {
-    isModalOpen: false,
+export const ImageGalleryItem = ({ img }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const onImageClick = () => {
+    setIsModalOpen(true);
+    window.addEventListener('keydown', onEscapeClick);
   };
 
-  onImageClick = () => {
-    this.setState({ isModalOpen: true });
-    window.addEventListener('keydown', this.onEscapeClick);
-  };
-
-  onEscapeClick = evt => {
+  const onEscapeClick = evt => {
     if (evt.code === 'Escape') {
-      this.setState({ isModalOpen: false });
-      window.removeEventListener('keydown', this.onEscapeClick);
+      setIsModalOpen(false);
+      window.removeEventListener('keydown', onEscapeClick);
     }
   };
 
-  onBackdropClick = evt => {
+  const onBackdropClick = evt => {
     if (evt.target === evt.currentTarget) {
-      this.setState({ isModalOpen: false });
+      setIsModalOpen(false);
+      window.removeEventListener('keydown', onEscapeClick);
     }
   };
 
-  render() {
-    const { webformatURL, tags, largeImageURL } = this.props.img;
+  const { webformatURL, tags, largeImageURL } = img;
 
-    return (
-      <>
-        {this.state.isModalOpen && (
-          <ModalWindow
-            url={largeImageURL}
-            tags={tags}
-            onClose={this.onBackdropClick}
-          ></ModalWindow>
-        )}
-        <GalleryItem>
-          <Image src={webformatURL} alt={tags} onClick={this.onImageClick} />
-        </GalleryItem>
-      </>
-    );
-  }
-}
+  return (
+    <>
+      {isModalOpen && (
+        <ModalWindow
+          url={largeImageURL}
+          tags={tags}
+          onClose={onBackdropClick}
+        ></ModalWindow>
+      )}
+      <GalleryItem>
+        <Image src={webformatURL} alt={tags} onClick={onImageClick} />
+      </GalleryItem>
+    </>
+  );
+};
 
 ImageGalleryItem.propTypes = {
   img: propTypes.shape({

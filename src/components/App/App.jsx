@@ -1,5 +1,5 @@
 import { getPictures } from '../../helpers/Pixabay';
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ImageGallery } from '../ImageGallery/ImageGallery';
 import { Searchbar } from '../Searchbar/Searchbar';
 import { Loader } from '../Loader/Loader';
@@ -7,77 +7,63 @@ import { Button } from '../Button/Button';
 import { Layout } from 'components/Layout/Layout.styled';
 import toast, { Toaster } from 'react-hot-toast';
 
-export class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    totalPages: 0,
-    images: [],
-    isLoading: false,
-    error: null,
-  };
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.page !== this.state.page ||
-      prevState.query !== this.state.query
-    ) {
-      this.setState({ isLoading: true });
-      this.fetchPics()
-        .then(data => {
-          if (data) {
-            this.setState(prevState => {
-              return { images: [...prevState.images, ...data] };
-            });
-          }
-        })
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ isLoading: false }));
+  useEffect(() => {
+    if (query === '') {
+      return;
     }
-  }
+    setIsLoading(true);
+    const fetchPics = async () => {
+      const data = await getPictures(query, page);
+      if (data.total > 0) {
+        const totalPages = Math.ceil(data.total / 12);
+        setTotalPages(totalPages);
+        return data.images;
+      } else {
+        onZeroResult();
+      }
+    };
+    fetchPics()
+      .then(data => {
+        if (data) {
+          setImages(prevImages => [...prevImages, ...data]);
+        }
+      })
+      .catch(error => setError(error))
+      .finally(() => setIsLoading(false));
+  }, [page, query]);
 
-  fetchPics = async () => {
-    const { query, page } = this.state;
-    const data = await getPictures(query, page);
-    if (data.total > 0) {
-      const totalPages = Math.ceil(data.total / 12);
-      this.setState({ totalPages });
-      return data.images;
-    } else {
-      this.onZeroResult();
-    }
+  const onSubmit = query => {
+    setQuery(query);
+    setPage(1);
+    setImages([]);
   };
 
-  onSubmit = query => {
-    this.setState({ query });
-    this.setState({ page: 1 });
-    this.setState({ images: [] });
+  const onLoadMore = async () => {
+    setPage(prev => prev + 1);
   };
 
-  onLoadMore = async () => {
-    this.setState(prevState => {
-      return {
-        page: prevState.page + 1,
-      };
-    });
-  };
-
-  onZeroResult = () => {
+  const onZeroResult = () => {
     toast.error('Sorry, no images found.');
   };
 
-  render() {
-    const { isLoading, images, page, totalPages } = this.state;
-    return (
-      <>
-        <Toaster></Toaster>
-        <Searchbar onSubmit={this.onSubmit}></Searchbar>
-        {isLoading && <Loader />}
-        <Layout>
-          {images.length > 0 && <ImageGallery images={images}></ImageGallery>}
-          {page < totalPages && <Button onClick={this.onLoadMore} />}
-        </Layout>
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Toaster></Toaster>
+      <Searchbar onSubmit={onSubmit}></Searchbar>
+      {isLoading && <Loader />}
+      <Layout>
+        {error && 'Sorry, something went wrong. Please retry later'}
+        {images.length > 0 && <ImageGallery images={images}></ImageGallery>}
+        {page < totalPages && <Button onClick={onLoadMore} />}
+      </Layout>
+    </>
+  );
+};

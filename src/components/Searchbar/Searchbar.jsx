@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import {
   SearchButton,
   SearchForm,
@@ -9,44 +9,35 @@ import {
 import propTypes from 'prop-types';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 
-export class Searchbar extends Component {
-  state = {
-    query: '',
-  };
+export const Searchbar = ({ onSubmit }) => {
+  const [query, setQuery] = useState('');
 
-  setQuery = evt => {
-    const value = evt.target.value.toLowerCase().trim();
-    this.setState({ query: value });
-  };
-
-  onFormSubmit = evt => {
+  const onFormSubmit = evt => {
     evt.preventDefault();
-    this.props.onSubmit(this.state.query);
-    this.setState({ query: '' });
+    onSubmit(query);
+    setQuery('');
   };
 
-  render() {
-    return (
-      <SearchbarStyled>
-        <SearchForm onSubmit={this.onFormSubmit}>
-          <SearchButton type="submit" disabled={this.state.query === ''}>
-            <SearchOutlinedIcon></SearchOutlinedIcon>
-            <SearchFormLabel>Search</SearchFormLabel>
-          </SearchButton>
+  return (
+    <SearchbarStyled>
+      <SearchForm onSubmit={onFormSubmit}>
+        <SearchButton type="submit" disabled={query === ''}>
+          <SearchOutlinedIcon></SearchOutlinedIcon>
+          <SearchFormLabel>Search</SearchFormLabel>
+        </SearchButton>
 
-          <SearchFormInput
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={this.state.query}
-            onChange={this.setQuery}
-          />
-        </SearchForm>
-      </SearchbarStyled>
-    );
-  }
-}
+        <SearchFormInput
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={query}
+          onChange={evt => setQuery(evt.target.value.toLowerCase().trim())}
+        />
+      </SearchForm>
+    </SearchbarStyled>
+  );
+};
 
 Searchbar.propTypes = {
   onSubmit: propTypes.func.isRequired,
